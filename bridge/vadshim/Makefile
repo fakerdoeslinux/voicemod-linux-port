@@ -1,6 +1,6 @@
 # Builds avrt.dll (vadshim) for the Windows build of Voicemod running under
 # Wine. Needs only clang, lld-link and the Wine development headers
-# (package names: Arch "wine", Debian/Ubuntu "wine" or "libwine-dev",
+# (package names: Arch "wine", Debian/Ubuntu "libwine-dev",
 # Fedora "wine-devel"). No Wine runtime, winedump or kernel32.dll required:
 # the kernel32 and avrt import definitions are committed as .def files.
 WINE_INC ?= /usr/include/wine

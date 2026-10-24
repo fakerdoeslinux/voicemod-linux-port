@@ -18,10 +18,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install build tools
+      - name: Install build tools and Wine headers
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang lld wine || sudo apt-get install -y clang lld wine64
+          sudo apt-get install -y clang lld libwine-dev
           test -d /usr/include/wine || { echo "Wine headers not found"; exit 1; }
 
       - name: Build the release bundle

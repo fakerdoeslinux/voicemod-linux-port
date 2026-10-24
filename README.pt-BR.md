@@ -1,10 +1,10 @@
 # voicemod-linux
 
-Rode o build oficial do [Voicemod](https://www.voicemod.net/) para Windows no
-Linux através do Proton. Um comando configura o Proton, baixa o Voicemod dos
-próprios servidores da Voicemod e integra o app ao PipeWire, de modo que a sua
-voz modificada aparece como um microfone comum que o Discord, o OBS, jogos e
-navegadores conseguem usar.
+Rode o [Voicemod](https://www.voicemod.net/) no Linux através do CachyOS
+Proton. O instalador baixa as versões mais recentes do CachyOS Proton e do
+Voicemod dos servidores oficiais e integra o app ao PipeWire, de modo que a
+sua voz modificada aparece como um microfone comum que o Discord, o OBS, jogos
+e navegadores conseguem usar.
 
 [English](README.md) | Português
 
@@ -16,9 +16,9 @@ navegadores conseguem usar.
 >
 > **Ele não faz crack, não pirateia e não burla pagamento, login ou qualquer
 > proteção.** Você usa a sua própria conta Voicemod. Nenhum binário da Voicemod
-> ou do Proton é distribuído aqui: o app da Voicemod é baixado dos servidores
-> da Voicemod e o GE-Proton da sua release oficial no GitHub, ambos para o seu
-> diretório pessoal, no momento da instalação.
+> ou do Proton é distribuído aqui: por padrão, o app da Voicemod é baixado dos
+> servidores da Voicemod e o CachyOS Proton da release oficial no GitHub,
+> ambos para o seu diretório pessoal, no momento da instalação.
 >
 > Rodar o Voicemod desta forma ainda pode conflitar com os
 > [Termos de Uso](https://www.voicemod.net/terms-of-use/) da Voicemod e colocar
@@ -31,13 +31,13 @@ Nada para clonar. Rode um destes:
 
 ```sh
 # curl
-curl -fsSL https://raw.githubusercontent.com/brunos3d/voicemod-linux/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/fakerh0g/voicemod-linux-port/main/install.sh | bash
 
 # wget
-wget -qO- https://raw.githubusercontent.com/brunos3d/voicemod-linux/main/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/fakerh0g/voicemod-linux-port/main/install.sh | bash
 
 # npx (Node)
-npx github:brunos3d/voicemod-linux
+npx github:fakerh0g/voicemod-linux-port
 ```
 
 O instalador baixa um pacote pequeno para um diretório temporário, instala o
@@ -54,9 +54,19 @@ faltando com o seu gerenciador de pacotes (pacman, apt, dnf ou zypper):
 - `pactl` (dos pacotes `pipewire-pulse` / `pulseaudio-utils`)
 - um servidor de som PipeWire (ou PulseAudio) funcionando
 
-Ele também precisa do GE-Proton. Se você já tiver um pelo Steam, ele é
-reaproveitado; senão o GE-Proton mais recente é baixado do GitHub e o checksum
-é verificado. Opcional: `icoutils` (para um ícone melhor no menu).
+O instalador também coloca a versão x86-64 mais recente do CachyOS Proton no
+diretório de dados do aplicativo e verifica o checksum SHA-512. O download é
+reutilizado até a publicação de uma versão mais nova. Opcional: `icoutils`
+(para um ícone melhor no menu).
+
+Para usar um instalador local do Windows no lugar do download mais recente do
+Voicemod, defina `VOICEMOD_INSTALLER` antes de executar o script. O arquivo
+permanece no seu computador e nunca é enviado ao repositório:
+
+```sh
+export VOICEMOD_INSTALLER="$HOME/Downloads/VoicemodInstaller_1.6.24-m0ry5a.exe"
+curl -fsSL https://raw.githubusercontent.com/fakerh0g/voicemod-linux-port/main/install.sh | bash
+```
 
 ## Primeira execução
 
@@ -74,6 +84,7 @@ Veja [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) se algo não funcionar.
 ```sh
 voicemod-linux            # inicia, ou traz a instância aberta para frente
 voicemod-linux update     # baixa a versão atual do Voicemod
+voicemod-linux install-app /caminho/para/VoicemodInstaller.exe
 voicemod-linux kill       # encerra o Voicemod e o wineserver
 voicemod-linux doctor     # mostra a configuração detectada
 voicemod-linux logs       # acompanha o log do Voicemod
@@ -84,11 +95,11 @@ voicemod-linux winecfg
 ## Desinstalação
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/brunos3d/voicemod-linux/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/fakerh0g/voicemod-linux-port/main/uninstall.sh | bash
 ```
 
 Isso remove `~/.local/share/voicemod-linux`, o link do launcher, a entrada do
-menu e o handler `voicemod:`. A sua conta Voicemod e qualquer GE-Proton do
+menu e o handler `voicemod:`. A sua conta Voicemod e qualquer CachyOS Proton do
 Steam ficam intactos.
 
 ## Testado em
@@ -96,7 +107,7 @@ Steam ficam intactos.
 - Manjaro e Arch Linux, kernel 6.18
 - GNOME no Wayland
 - PipeWire 1.6 (com `pipewire-pulse`)
-- GE-Proton11-1
+- CachyOS Proton (release x86-64 mais recente)
 - x86-64 com AVX, GPU NVIDIA (DXVK)
 
 Deve funcionar em outras distribuições e desktops com PipeWire. Relatos e
@@ -118,7 +129,7 @@ substituída:
 | Endpoints de render/captura do `voicemodvad.sys` | Sink nulo `voicemod_vad` e source remapeada `voicemod_mic` no PipeWire, ambos chamados "Voicemod Virtual Audio Device (WDM)" |
 | Dispositivo de controle `\\.\voicemodvad` | `bridge/vadshim`, compilado como `avrt.dll` e carregado da pasta do app |
 | Entrada de driver vista pelo SetupAPI após o login | `bridge/registry/voicemodvad.reg` |
-| Compartilhamento de texturas D3D11 do QtWebEngine | DXVK e o Wine do GE-Proton (o Wine padrão mostra tela preta) |
+| Compartilhamento de texturas D3D11 do QtWebEngine | DXVK e o Wine do CachyOS Proton (o Wine padrão pode mostrar tela preta) |
 | Login no navegador e o callback `voicemod:` | `bin/voicemod-open-url` mais um handler `.desktop` |
 
 O binário do aplicativo em disco nunca é modificado. O shim carrega como
@@ -133,8 +144,8 @@ O pacote de release já inclui o shim pré-compilado. Para compilar você mesmo,
 precisa de `clang`, `lld` e os headers de desenvolvimento do Wine:
 
 ```sh
-git clone https://github.com/brunos3d/voicemod-linux
-cd voicemod-linux
+git clone https://github.com/fakerh0g/voicemod-linux-port
+cd voicemod-linux-port
 make -C bridge/vadshim      # produz bridge/vadshim/avrt.dll
 ./install.sh --local        # instala a partir deste checkout
 ```

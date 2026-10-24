@@ -2,7 +2,7 @@
 
 Thanks for helping make Voicemod usable on more Linux setups. This tool was
 built and tested on one configuration (Manjaro/Arch, GNOME on Wayland, PipeWire
-1.6, GE-Proton11-1, NVIDIA). The most useful contributions right now are
+1.6, CachyOS Proton, NVIDIA). The most useful contributions right now are
 reports and fixes for environments it has not been tried on.
 
 ## Especially wanted
@@ -16,7 +16,7 @@ reports and fixes for environments it has not been tried on.
 - **PulseAudio-only (no PipeWire).** The virtual devices are created with
   `pactl load-module module-null-sink` / `module-remap-source`, which also work
   on PulseAudio. Verify and report.
-- **AMD and Intel GPUs.** The black-window fix relies on DXVK in GE-Proton.
+- **AMD and Intel GPUs.** The black-window fix relies on DXVK in CachyOS Proton.
   Confirm it renders on non-NVIDIA GPUs.
 - **Other distributions.** The installer maps package names for pacman, apt,
   dnf and zypper (`pkg_for` in `install.sh`). Add mappings for others.
@@ -27,8 +27,8 @@ reports and fixes for environments it has not been tried on.
 ## Development setup
 
 ```sh
-git clone https://github.com/brunos3d/voicemod-linux
-cd voicemod-linux
+git clone https://github.com/fakerh0g/voicemod-linux-port
+cd voicemod-linux-port
 # build the shim (needs clang, lld, and the Wine headers in /usr/include/wine)
 make -C bridge/vadshim
 # install from this checkout instead of downloading a release bundle
@@ -63,8 +63,8 @@ without a C runtime and imports only the kernel32 functions listed in
 `kernel32.def`. The build is reproducible; please keep it that way (`make -C
 bridge/vadshim` twice must produce identical output). CI enforces this.
 
-No Voicemod or Proton code or binaries belong in the repository or in commits.
-The release bundle contains only our files plus the shim we compile.
+Do not add Voicemod or Proton binaries to the repository or commits. The
+release bundle contains only this project's files plus the shim we compile.
 
 ## Reporting an issue
 

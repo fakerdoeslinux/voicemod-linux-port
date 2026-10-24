@@ -1,7 +1,7 @@
 {
-  "name": "voicemod-linux",
+  "name": "voicemod-cachyos-linux",
   "version": "1.0.0",
-  "description": "Run the official Windows build of Voicemod on Linux through Proton. Unofficial compatibility tool; requires your own Voicemod account.",
+  "description": "Run Voicemod on Linux through CachyOS Proton. Unofficial compatibility tool; requires your own Voicemod account.",
   "bin": {
     "voicemod-linux-install": "install.sh"
   },
@@ -19,10 +19,10 @@
     "pipewire",
     "compatibility"
   ],
-  "homepage": "https://github.com/brunos3d/voicemod-linux",
+  "homepage": "https://github.com/fakerh0g/voicemod-linux-port",
   "repository": {
     "type": "git",
-    "url": "https://github.com/brunos3d/voicemod-linux.git"
+    "url": "https://github.com/fakerh0g/voicemod-linux-port.git"
   },
   "license": "MIT"
 }

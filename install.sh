@@ -2,13 +2,13 @@
 # voicemod-linux installer.
 #
 # One-line install (nothing to clone):
-#   curl -fsSL https://raw.githubusercontent.com/brunos3d/voicemod-linux/main/install.sh | bash
-#   wget -qO-  https://raw.githubusercontent.com/brunos3d/voicemod-linux/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/fakerh0g/voicemod-linux-port/main/install.sh | bash
+#   wget -qO-  https://raw.githubusercontent.com/fakerh0g/voicemod-linux-port/main/install.sh | bash
 #
 # This script sets up a tool that runs the official Windows build of Voicemod
 # on Linux through Proton. It does NOT contain or distribute any Voicemod or
 # Proton binary: Voicemod is downloaded from Voicemod's own servers and
-# GE-Proton from its official GitHub release, both into your home directory.
+# CachyOS Proton from its official GitHub release, both into your home directory.
 # You need your own Voicemod account. Nothing here bypasses payment, login or
 # copy protection.
 #
@@ -16,11 +16,11 @@
 # temporary directory, installs from there, and deletes the temporary copy.
 set -euo pipefail
 
-REPO="brunos3d/voicemod-linux"
+REPO="fakerh0g/voicemod-linux-port"
 RELEASE_ASSET="voicemod-linux.tar.gz"
 PREFIX="${VML_PREFIX:-${XDG_DATA_HOME:-$HOME/.local/share}/voicemod-linux}"
 BIN_LINK="$HOME/.local/bin/voicemod-linux"
-GE_PROTON_REPO="GloriousEggroll/proton-ge-custom"
+CACHYOS_PROTON_REPO="CachyOS/proton-cachyos"
 
 ASSUME_YES=0; DO_DEPS=1; DO_PROTON=1; DO_APP=1
 
@@ -111,7 +111,7 @@ banner() {
 ${c_bold}voicemod-linux${c_off} ${c_dim}(unofficial)${c_off}
 Runs the official Windows build of Voicemod on Linux through Proton.
 You need your own Voicemod account. This does not crack, pirate, or bypass
-payment, login, or copy protection. Voicemod and GE-Proton are downloaded
+payment, login, or copy protection. Voicemod and CachyOS Proton are downloaded
 from their official sources into your home directory.
 BANNER
 }
@@ -123,6 +123,7 @@ detect_pm() { for pm in pacman apt-get dnf zypper; do command -v "$pm" >/dev/nul
 pkg_for() {
     case "$1:$2" in
         curl:*) echo curl ;; wget:*) echo wget ;; unzip:*) echo unzip ;; tar:*) echo tar ;;
+        xz:apt-get) echo xz-utils ;; xz:*) echo xz ;;
         python3:pacman) echo python ;; python3:*) echo python3 ;;
         pactl:pacman) echo libpulse ;; pactl:*) echo pulseaudio-utils ;;
     esac
@@ -144,9 +145,9 @@ install_packages() {
 
 check_deps() {
     step "Checking dependencies"
-    local required=(curl unzip python3 pactl) missing=() cmd
+    local required=(curl unzip python3 pactl tar xz) missing=() cmd
     command -v curl >/dev/null || command -v wget >/dev/null || missing+=(curl)
-    for cmd in unzip python3 pactl; do command -v "$cmd" >/dev/null || missing+=("$cmd"); done
+    for cmd in unzip python3 pactl tar xz; do command -v "$cmd" >/dev/null || missing+=("$cmd"); done
     if [[ ${#missing[@]} -eq 0 ]]; then ok "all required tools present"; return; fi
     warn "missing: ${missing[*]}"
     [[ "$DO_DEPS" == 1 ]] || die "install them manually, or drop --no-deps"
@@ -179,59 +180,88 @@ copy_project() {
     ok "project files in place"
 }
 
-# ------------------------------------------------- 3. GE-Proton --
+# ------------------------------------------------- 3. CachyOS Proton --
 
-have_ge_proton() {
+have_cachyos_proton() {
     local d
-    for d in "$PREFIX"/proton/GE-Proton* \
-             "$HOME"/.steam/steam/compatibilitytools.d/GE-Proton* \
-             "$HOME"/.local/share/Steam/compatibilitytools.d/GE-Proton* \
-             "$HOME"/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d/GE-Proton*; do
+    for d in "$PREFIX"/proton/proton-cachyos* "$PREFIX"/proton/Proton-CachyOS* \
+             "$PREFIX"/proton/CachyOS-Proton* "$PREFIX"/proton/cachyos-proton* \
+             "$HOME"/.steam/steam/compatibilitytools.d/proton-cachyos* \
+             "$HOME"/.steam/steam/compatibilitytools.d/Proton-CachyOS* \
+             "$HOME"/.steam/steam/compatibilitytools.d/CachyOS-Proton* \
+             "$HOME"/.steam/root/compatibilitytools.d/proton-cachyos* \
+             "$HOME"/.steam/root/compatibilitytools.d/Proton-CachyOS* \
+             "$HOME"/.steam/root/compatibilitytools.d/CachyOS-Proton* \
+             "$HOME"/.local/share/Steam/compatibilitytools.d/proton-cachyos* \
+             "$HOME"/.local/share/Steam/compatibilitytools.d/Proton-CachyOS* \
+             "$HOME"/.local/share/Steam/compatibilitytools.d/CachyOS-Proton* \
+             "$HOME"/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d/proton-cachyos* \
+             "$HOME"/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d/Proton-CachyOS* \
+             "$HOME"/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d/CachyOS-Proton*; do
         [[ -x "$d/proton" ]] && return 0
     done
     return 1
 }
 
 install_proton() {
-    step "GE-Proton"
-    if have_ge_proton; then ok "a GE-Proton build is already available, reusing it"; return; fi
-    [[ "$DO_PROTON" == 1 ]] || die "no GE-Proton found and --no-proton was given"
-    command -v tar >/dev/null || die "tar is required to unpack GE-Proton"
-    step "Finding the latest GE-Proton release"
-    local tag tgz sha
-    read -r tag tgz sha < <(fetch_quiet "https://api.github.com/repos/$GE_PROTON_REPO/releases/latest" | python3 -c '
-import json,sys
-d=json.load(sys.stdin); tag=d["tag_name"]; a=b=""
-for x in d["assets"]:
-    n=x["name"]
-    if n.endswith(".tar.gz"): a=x["browser_download_url"]
-    elif n.endswith(".sha512sum"): b=x["browser_download_url"]
-print(tag,a,b)') || die "could not query GitHub for GE-Proton"
-    [[ -n "$tgz" ]] || die "no .tar.gz asset in the latest release"
-    step "Downloading $tag (about 400 MB)"
-    local tmp; tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' RETURN
-    fetch "$tgz" "$tmp/ge.tar.gz" || die "download failed"
-    if [[ -n "$sha" ]] && fetch_quiet "$sha" > "$tmp/ge.sha512sum" 2>/dev/null; then
-        step "Verifying checksum"
-        ( cd "$tmp" && sed "s#  .*/#  #; s#  [^ ]*\$#  ge.tar.gz#" ge.sha512sum > ge.local \
-          && sha512sum -c ge.local >/dev/null ) || die "checksum mismatch; aborting"
-        ok "checksum verified"
-    else
-        warn "no checksum for $tag; skipping verification"
+    step "CachyOS Proton"
+    if [[ "$DO_PROTON" == 0 ]]; then
+        have_cachyos_proton && { ok "using the installed CachyOS Proton build"; return; }
+        die "no CachyOS Proton found and --no-proton was given"
     fi
+    command -v tar >/dev/null || die "tar is required to unpack CachyOS Proton"
+    command -v sha512sum >/dev/null || die "sha512sum is required to verify CachyOS Proton"
+    step "Finding the latest CachyOS Proton release"
+    local tag archive sha expected
+    read -r tag archive sha < <(fetch_quiet "https://api.github.com/repos/$CACHYOS_PROTON_REPO/releases/latest" | python3 -c '
+import json,sys
+d=json.load(sys.stdin); assets={x["name"]:x["browser_download_url"] for x in d["assets"]}
+name=next((n for n in assets if n.endswith("-x86_64.tar.xz")), "")
+checksum=name[:-7] + ".sha512sum"
+print(d["tag_name"], assets.get(name, ""), assets.get(checksum, ""))
+') || die "could not query GitHub for CachyOS Proton"
+    [[ -n "$archive" && -n "$sha" ]] || die "latest release has no x86_64 archive with a SHA-512 checksum"
+    if [[ "$(cat "$PREFIX/proton/.cachyos-release" 2>/dev/null)" == "$tag" ]] \
+        && have_cachyos_proton; then
+        ok "$tag is already installed"
+        return
+    fi
+    step "Downloading $tag"
+    local tmp; tmp="$(mktemp -d "${TMPDIR:-/tmp}/cachyos-proton.XXXXXX")"; trap 'rm -rf "$tmp"' RETURN
+    fetch "$archive" "$tmp/proton.tar.xz" || die "CachyOS Proton download failed"
+    fetch "$sha" "$tmp/proton.sha512sum" || die "could not download the CachyOS Proton checksum"
+    expected="$(awk 'NR == 1 { print $1 }' "$tmp/proton.sha512sum")"
+    [[ "$expected" =~ ^[[:xdigit:]]{128}$ ]] || die "invalid CachyOS Proton SHA-512 checksum"
+    printf '%s  %s\n' "$expected" "$tmp/proton.tar.xz" | sha512sum -c - >/dev/null \
+        || die "CachyOS Proton checksum mismatch; aborting"
+    ok "checksum verified"
+    mkdir -p "$tmp/extracted"
+    tar -xJf "$tmp/proton.tar.xz" -C "$tmp/extracted"
+    local proton_script
+    proton_script="$(find "$tmp/extracted" -mindepth 2 -maxdepth 5 -type f -name proton -print -quit)"
+    [[ -n "$proton_script" && -x "$proton_script" ]] || die "CachyOS Proton archive has no executable proton script"
+    local proton_dir="${proton_script%/proton}"
+    rm -rf "$PREFIX/proton"
     mkdir -p "$PREFIX/proton"
-    tar -xzf "$tmp/ge.tar.gz" -C "$PREFIX/proton"
-    have_ge_proton || die "GE-Proton did not unpack correctly"
+    mv "$proton_dir" "$PREFIX/proton/"
+    printf '%s\n' "$tag" > "$PREFIX/proton/.cachyos-release"
+    have_cachyos_proton || die "CachyOS Proton did not unpack correctly"
     ok "$tag installed in $PREFIX/proton"
 }
 
 # ------------------------------------------------- 4. Voicemod --
 
 install_app() {
-    step "Downloading Voicemod from voicemod.net"
+    step "Voicemod"
     if [[ "$DO_APP" == 0 ]]; then warn "skipped (run 'voicemod-linux update' later)"; return; fi
-    VML_HOME="$PREFIX" "$PREFIX/bin/voicemod-linux" update || die "Voicemod download failed"
-    ok "Voicemod downloaded"
+    if [[ -n "${VOICEMOD_INSTALLER:-}" ]]; then
+        [[ -f "$VOICEMOD_INSTALLER" ]] || die "VOICEMOD_INSTALLER does not point to a file"
+        VML_HOME="$PREFIX" "$PREFIX/bin/voicemod-linux" install-app "$VOICEMOD_INSTALLER" \
+            || die "Voicemod installer failed"
+    else
+        VML_HOME="$PREFIX" "$PREFIX/bin/voicemod-linux" update || die "Voicemod download failed"
+    fi
+    ok "Voicemod is ready"
 }
 
 # ------------------------------------------------- 5. desktop + PATH --

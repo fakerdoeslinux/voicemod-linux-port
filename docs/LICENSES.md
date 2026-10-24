@@ -6,8 +6,10 @@ advice.
 
 ## What this repository distributes
 
-Only original code written for this project, under the MIT License
-([LICENSE](../LICENSE)):
+This repository adapts code from
+[brunos3d/voicemod-linux](https://github.com/brunos3d/voicemod-linux), under
+the MIT License ([LICENSE](../LICENSE)). The original copyright and permission
+notice are retained; changes in this repository are also MIT licensed:
 
 - the installer and uninstaller scripts;
 - the `voicemod-linux` launcher and the `voicemod-open-url` helper;
@@ -21,7 +23,7 @@ also under MIT. The build is reproducible and verified in CI.
 
 ## What this repository does NOT distribute
 
-No Voicemod code, assets, trademarks or logos. No Proton, Wine or DXVK
+No Voicemod code, assets, trademarks or logos. No CachyOS Proton, Wine or DXVK
 binaries. These are obtained at install time from their official sources into
 the user's home directory.
 
@@ -29,11 +31,11 @@ the user's home directory.
 
 ### Voicemod (proprietary)
 
-Voicemod is downloaded from Voicemod's own servers (`api.voicemod.net` and its
-CDN) using the same update endpoint the official launcher uses. The user must
+By default, the latest Voicemod app is downloaded from Voicemod's own servers
+(`api.voicemod.net` and its CDN) using the same update endpoint the official
+launcher uses. A user may instead provide a local installer. The user must
 have a Voicemod account. This tool does not bypass payment, authentication,
-licensing, or copy protection, and it never modifies the Voicemod binary on
-disk.
+licensing, or copy protection.
 
 Voicemod's [Terms of Use](https://www.voicemod.net/terms-of-use/), section 8,
 prohibits reverse engineering "unless you have our written consent or
@@ -58,17 +60,13 @@ is narrower, and even where the acts are lawful, Voicemod may still treat use
 outside Windows as a Terms violation and act on the account under section 14.
 Each user decides whether to accept that.
 
-### GE-Proton
+### CachyOS Proton
 
-Downloaded from the official release of
-[GloriousEggroll/proton-ge-custom](https://github.com/GloriousEggroll/proton-ge-custom).
-Proton's top-level code is under the **BSD 3-Clause License** (Valve
-Corporation), which permits use and redistribution in source and binary form,
-including outside Steam, with attribution. Proton bundles other components under
-their own licenses, including Wine (**LGPL-2.1-or-later**), DXVK (**zlib**) and
-vkd3d-proton (**LGPL-2.1 / zlib**). This project does not redistribute Proton;
-it downloads the official release and runs it. The GE-Proton checksum is
-verified after download.
+Downloaded from the official
+[CachyOS/proton-cachyos](https://github.com/CachyOS/proton-cachyos) release.
+This project does not redistribute Proton; it downloads the latest x86-64
+release, verifies its published SHA-512 checksum, and runs it. Consult the
+upstream repository for the licenses of Proton and its bundled components.
 
 ## Build tools (not bundled)
 

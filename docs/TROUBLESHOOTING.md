@@ -10,13 +10,13 @@ running. The application log is at
 
 The UI is rendered by QtWebEngine, which shares D3D11 textures between
 processes through NT handles. Stock Wine (10/11) does not implement that path,
-so the window stays black. The fix is to use GE-Proton, whose Wine does.
+so the window stays black. The fix is to use CachyOS Proton, whose Wine does.
 
-- Confirm the launcher picked GE-Proton: `voicemod-linux doctor` should show a
-  `GE-Proton...` path, not "Proton - Experimental" or system Wine.
-- If only Valve's Proton is installed, install GE-Proton (ProtonUp-Qt, or let
-  the installer download it) and run again.
-- Force a specific build with `VOICEMOD_PROTON=/path/to/GE-Proton... voicemod-linux`.
+- Confirm the launcher picked CachyOS Proton: `voicemod-linux doctor` should
+  show a `proton-cachyos...` path, not "Proton - Experimental" or system Wine.
+- If CachyOS Proton is not installed, rerun the installer to download it.
+- Force a specific build with
+  `VOICEMOD_PROTON=/path/to/proton-cachyos voicemod-linux`.
 
 ## The login browser does not open
 
@@ -93,11 +93,18 @@ unresolved limitation, not a setup problem.
   `~/.config/pipewire/pipewire.conf.d/`.
 - Close other heavy GPU/audio apps; QtWebEngine plus DXVK uses the GPU.
 
-## "GE-Proton not found"
+## "CachyOS Proton not found"
 
-The installer downloads GE-Proton, or reuses one from Steam. If detection
-fails, pass the path explicitly:
-`VOICEMOD_PROTON=/home/you/.steam/steam/compatibilitytools.d/GE-Proton9-20 voicemod-linux`.
+The installer downloads CachyOS Proton into the app's data directory. If
+detection fails, pass its path explicitly:
+`VOICEMOD_PROTON=/home/you/.steam/steam/compatibilitytools.d/proton-cachyos voicemod-linux`.
+
+## Install from a local Voicemod installer
+
+The README install command downloads the latest Voicemod release by default.
+To install a local `.exe`, use
+`VOICEMOD_INSTALLER=/path/to/VoicemodInstaller.exe ./install.sh --local`, or
+run `voicemod-linux install-app /path/to/VoicemodInstaller.exe`.
 
 ## Start fresh
 

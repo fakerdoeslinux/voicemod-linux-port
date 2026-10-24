@@ -7,6 +7,7 @@
 #   run (default)    start Voicemod, or focus the running instance
 #   open URL         handle a voicemod: link (login callback, voice imports)
 #   update           download the current Voicemod release from voicemod.net
+#   install-app EXE  install Voicemod from a local Windows installer
 #   kill             stop Voicemod and its wineserver
 #   setup-audio      create the PipeWire virtual devices
 #   teardown-audio   remove them
@@ -20,7 +21,7 @@ set -euo pipefail
 #   bridge/           vadshim (avrt.dll) and registry entries
 #   app/core/         %LOCALAPPDATA%\VoicemodV3\app\last
 #   prefix/pfx/       Proton prefix
-#   proton/           GE-Proton downloaded by install.sh, if any
+#   proton/           CachyOS Proton downloaded by install.sh, if any
 #   logs/
 VML_HOME="${VML_HOME:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)}"
 CORE_DIR="$VML_HOME/app/core"
@@ -52,6 +53,7 @@ is_running() { pgrep -f 'VoicemodV3\\app\\last\\Voicemod.exe' >/dev/null; }
 
 PROTON_SEARCH_DIRS=(
     "$VML_HOME/proton"
+    "$HOME/.steam/root/compatibilitytools.d"
     "$HOME/.steam/steam/compatibilitytools.d"
     "$HOME/.local/share/Steam/compatibilitytools.d"
     "$HOME/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d"
@@ -63,16 +65,17 @@ find_proton() {
         echo "$VOICEMOD_PROTON"
         return
     fi
-    # Prefer the newest GE-Proton: its Wine implements the shared D3D11
-    # textures QtWebEngine uses; the stock Wine 10/11 shows a black window.
+    # CachyOS Proton's Wine supports the shared D3D11 textures QtWebEngine
+    # uses; stock Wine can leave the window black.
     local dir name best=""
     for dir in "${PROTON_SEARCH_DIRS[@]}"; do
-        for name in "$dir"/GE-Proton*; do
+        for name in "$dir"/proton-cachyos* "$dir"/Proton-CachyOS* \
+                    "$dir"/CachyOS-Proton* "$dir"/cachyos-proton*; do
             [[ -x "$name/proton" ]] && best+="$(basename "$name") $name"$'\n'
         done
     done
     best="$(printf '%s' "$best" | sort -V -k1,1 | tail -n1 | cut -d' ' -f2-)"
-    [[ -n "$best" ]] || die "GE-Proton not found. Run install.sh again or set VOICEMOD_PROTON."
+    [[ -n "$best" ]] || die "CachyOS Proton not found. Run install.sh again or set VOICEMOD_PROTON."
     echo "$best"
 }
 
@@ -112,6 +115,9 @@ ensure_prefix() {
 
     # Same location the official launcher installs the app to.
     mkdir -p "$LOCAL_APPDATA/app"
+    if [[ -e "$LOCAL_APPDATA/app/last" && ! -L "$LOCAL_APPDATA/app/last" ]]; then
+        rm -rf "$LOCAL_APPDATA/app/last"
+    fi
     ln -sfn "$CORE_DIR" "$LOCAL_APPDATA/app/last"
 
     install_shim
@@ -211,6 +217,33 @@ print(d["appVersion"], d["version"]["update"]["windows"]["file"])') \
     log "Voicemod $version installed in $CORE_DIR"
 }
 
+install_app() {
+    local installer="${1:-}" installed_exe installed_dir
+    [[ -n "$installer" && -f "$installer" ]] || die "usage: voicemod-linux install-app /path/to/VoicemodInstaller.exe"
+    is_running && die "close Voicemod first ('voicemod-linux kill')"
+    installer="$(readlink -f "$installer")"
+
+    if [[ ! -f "$PFX/system.reg" ]]; then
+        mkdir -p "$COMPAT"
+        proton run wineboot -u >/dev/null 2>&1 || die "could not create the Proton prefix"
+    fi
+
+    log "Starting the local Voicemod installer: $(basename "$installer")"
+    proton run "$installer" || die "Voicemod installer did not complete"
+
+    installed_exe="$(find "$PFX/drive_c" -type f -iname Voicemod.exe -print -quit)"
+    [[ -n "$installed_exe" ]] || die "installer finished, but Voicemod.exe was not found in the Proton prefix"
+    installed_dir="$(dirname "$installed_exe")"
+    [[ "$installed_dir" != "$CORE_DIR" ]] || die "installer output unexpectedly points to $CORE_DIR"
+
+    rm -rf "$CORE_DIR"
+    mkdir -p "$CORE_DIR"
+    cp -a "$installed_dir/." "$CORE_DIR/"
+    printf 'installed from %s\n' "$(basename "$installer")" > "$CORE_DIR/.version"
+    install_shim
+    log "Voicemod installed from $(basename "$installer")"
+}
+
 # ------------------------------------------------------------------- run --
 
 run() {
@@ -256,6 +289,7 @@ case "${1:-run}" in
     run)            shift || true; run "$@" ;;
     open)           shift || true; open_entry "${1:-}" ;;
     update)         update ;;
+    install-app)    shift || true; install_app "${1:-}" ;;
     kill)           proton run wineserver -k 2>/dev/null || pkill -f 'VoicemodV3\\app\\last' || true ;;
     setup-audio)    setup_audio ;;
     teardown-audio) teardown_audio ;;

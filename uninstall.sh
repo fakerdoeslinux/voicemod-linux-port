@@ -2,11 +2,11 @@
 # voicemod-linux uninstaller.
 #
 # One-line uninstall:
-#   curl -fsSL https://raw.githubusercontent.com/brunos3d/voicemod-linux/main/uninstall.sh | bash
-#   wget -qO-  https://raw.githubusercontent.com/brunos3d/voicemod-linux/main/uninstall.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/fakerh0g/voicemod-linux-port/main/uninstall.sh | bash
+#   wget -qO-  https://raw.githubusercontent.com/fakerh0g/voicemod-linux-port/main/uninstall.sh | bash
 #
 # Removes everything the installer created in your home directory. It does not
-# touch your Voicemod account or a GE-Proton you installed through Steam.
+# touch your Voicemod account or CachyOS Proton you installed through Steam.
 set -euo pipefail
 
 PREFIX="${VML_PREFIX:-${XDG_DATA_HOME:-$HOME/.local/share}/voicemod-linux}"
@@ -40,11 +40,11 @@ if [[ -x "$PREFIX/bin/voicemod-linux" ]]; then
 fi
 
 echo "This removes:"
-echo "  $PREFIX  (launcher, bridge, Proton prefix, downloaded Voicemod and GE-Proton)"
+echo "  $PREFIX  (launcher, bridge, Proton prefix, Voicemod and CachyOS Proton)"
 echo "  $BIN_LINK"
 echo "  $APPS/voicemod-linux.desktop"
 echo "  $ICONS/voicemod-linux.png"
-echo "Your Voicemod account and any Steam GE-Proton are left untouched."
+echo "Your Voicemod account and any Steam CachyOS Proton are left untouched."
 ask "Proceed?" || { echo "Aborted."; exit 0; }
 
 rm -rf "$PREFIX"

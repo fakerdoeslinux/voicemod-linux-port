@@ -6,9 +6,11 @@
 WINE_INC ?= /usr/include/wine
 BUILD    ?= build
 
+WINE_HEADERS = $(if $(wildcard $(WINE_INC)/windows/windef.h),$(WINE_INC),$(WINE_INC)/wine)
+
 CFLAGS = --target=x86_64-w64-windows-gnu -O2 -ffreestanding -fno-stack-protector -fno-builtin \
          -fshort-wchar -nostdinc -isystem $(shell clang -print-resource-dir)/include \
-         -I$(WINE_INC)/msvcrt -I$(WINE_INC)/windows -DWINE_UNICODE_NATIVE -Wall
+         -I$(WINE_HEADERS)/msvcrt -I$(WINE_HEADERS)/windows -DWINE_UNICODE_NATIVE -Wall
 
 all: avrt.dll
 

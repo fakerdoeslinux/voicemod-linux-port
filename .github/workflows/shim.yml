@@ -7,9 +7,8 @@ name: shim
 
 on:
   push:
-    paths: ['bridge/vadshim/**', '.github/workflows/shim.yml']
   pull_request:
-    paths: ['bridge/vadshim/**', '.github/workflows/shim.yml']
+  workflow_dispatch:
 
 jobs:
   build:
